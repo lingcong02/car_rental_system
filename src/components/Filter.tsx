@@ -1,11 +1,27 @@
 "use client";
 
+import { VehicleModelModel } from "@/model/Model";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const Filter = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { replace } = useRouter();
+  const [vehicleModelList, setVehicleModelList] = useState<VehicleModelModel[]>(
+    []
+  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch("api/VehicleModel/GetAll", {
+        method: "GET",
+      });
+      const result = await response.json();
+      setVehicleModelList(result);
+    };
+    fetchData();
+  }, []);
 
   const handleFilterChange = (
     e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>
@@ -20,13 +36,15 @@ const Filter = () => {
     <div className="mt-12 flex justify-between">
       <div className="flex gap-6 flex-wrap">
         <select
-          name="cat"
+          name="model"
+          id=""
           className="py-2 px-4 rounded-2xl text-xs font-medium bg-[#EBEDED]"
           onChange={handleFilterChange}
         >
           <option>Model</option>
-          <option value="">New Arrival</option>
-          <option value="">Popular</option>
+          {vehicleModelList.map((vehicleModel: VehicleModelModel) => (
+            <option key={vehicleModel.id} value={vehicleModel.id}>{vehicleModel.desc}</option>
+          ))}
         </select>
         <input
           type="text"
@@ -42,25 +60,17 @@ const Filter = () => {
           className="text-xs rounded-2xl pl-2 w-24 ring-1 ring-gray-400"
           onChange={handleFilterChange}
         />
-        {/* TODO: Filter Categories */}
-        <select
-          name=""
-          id=""
-          className="py-2 px-4 rounded-2xl text-xs font-medium bg-[#EBEDED]"
-        >
-          <option>All Filters</option>
-        </select>
       </div>
       <div className="">
         <select
-          name="sort"
+          name="sortType"
           id=""
           className="py-2 px-4 rounded-2xl text-xs font-medium bg-white ring-1 ring-gray-400"
           onChange={handleFilterChange}
         >
           <option>Sort By</option>
-          <option value="asc price">Price (low to high)</option>
-          <option value="desc price">Price (high to low)</option>
+          <option value="asc-price">Price (low to high)</option>
+          <option value="desc-price">Price (high to low)</option>
         </select>
       </div>
     </div>

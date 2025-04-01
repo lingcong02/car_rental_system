@@ -126,21 +126,48 @@ const LoginPage = () => {
     //       setIsLoading(false);
     //     }
   };
-
+  // const{UpdateUser} = LoginRepository();
+  // const response = UpdateUser();
+  // console.log(response);
   const [user, setUser] = useState("");
+  useEffect(() => {
+    fetch("/api/Auth/Login", {
+      method: "POST", // ✅ Now POST should work
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // ✅ Ensures cookies (JWT) are sent
+      body: JSON.stringify({ userName: "user1", password: "abc123" }),
+    })
+      .then((response) => response.json())
+      .then((data) => setUser(data.message))
+      .catch((error) => console.error("Fetch error:", error));
 
-  fetch("/api/Auth/Login", {
-    method: "POST", // ✅ Now POST should work
+    
+  }, []);
+
+  const token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwidW5pcXVlX25hbWUiOiJ1c2VyMSIsImp0aSI6ImEyYjU0NGY3LWM5ZTUtNDQ0Ni1hMDk0LTUwZjY3ZGQ5MTI2YSIsIm5iZiI6MTc0MzUwMTc4NSwiZXhwIjoxNzQzNTA1Mzg1LCJpYXQiOjE3NDM1MDE3ODUsImlzcyI6Imh0dHBzOi8vbG9jYWxob3N0OjUwMDEiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjMwMDAifQ.GAqdwv3Ts_jRVFWOnc1jJGteIuKfMpmw_kLoJ7cUo9k";
+  console.log(user);
+  console.log(`Bearer ${user?? token}`);
+
+  fetch("/api/User/Update", {
+    method: "PATCH",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${user?? token}`,
     },
-    credentials: "include", // ✅ Ensures cookies (JWT) are sent
-    body: JSON.stringify({ userName: "user1", password: "abc123" }),
+    body: JSON.stringify({
+      name: "user1",
+      password: "abc123",
+      phone: "0123456789",
+      email: "user@gmail.com",
+    }),
   })
-    .then((response) => response.json())
+    .then(async(response) => response.json())
     .then((data) => console.log("Response:", data))
     .catch((error) => console.error("Fetch error:", error));
-
   // useEffect(() => {
   //   fetch("/api/Auth/Login", {
   //     method: "POST",
@@ -160,26 +187,7 @@ const LoginPage = () => {
   // }, []);
   // console.log(email);
 
-  // useEffect(() => {
-  //   fetch("/api/User/Update", {
-  //     method: "PATCH",
-  //     credentials: "include",
-  //     body: JSON.stringify([
-  //       {
-  //         name: "string",
-  //         password: "string",
-  //         phone: "string",
-  //         email: "string",
-  //       },
-  //     ]),
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   })
-  //     .then((res) => (res.ok ? res.json() : Promise.reject("Unauthorized")))
-  //     .then((data) => setUser(data))
-  //     .catch((error) => console.error(error));
-  // }, []);
+  useEffect(() => {}, []);
   // console.log(user);
 
   return (

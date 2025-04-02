@@ -7,17 +7,10 @@ import { VehicleModel, VehicleModelModel } from "@/model/Model";
 import { PaginationWithLinks } from "./PaginationWithLinks";
 import { useSearchParams } from "next/navigation";
 import Skeleton from "./Skeleton";
-import { useRouter } from "next/router";
 
-const VEHICLE_PER_PAGE = 4;
+const VEHICLE_PER_PAGE = 8;
 
-const VehicleList = ({
-  limit,
-  searchParams,
-}: {
-  limit?: number;
-  searchParams?: any;
-}) => {
+const VehicleList = () => {
   const searchParam = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -35,11 +28,11 @@ const VehicleList = ({
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response1 = await fetch("api/Vehicle/GetAll", { method: "GET" });
+        const response1 = await fetch("/api/Vehicle/GetAll", { method: "GET" });
         const result1 = await response1.json();
         setVehicleList(result1);
 
-        const response2 = await fetch("api/VehicleModel/GetAll", {
+        const response2 = await fetch("/api/VehicleModel/GetAll", {
           method: "GET",
         });
         const result2 = await response2.json();
@@ -57,8 +50,6 @@ const VehicleList = ({
 
   useEffect(() => {
     setIsLoading(true);
-    if (!vehicleList.length) return;
-
     let sortedList = [...vehicleList];
 
     const sortName = searchParam.get("name")?.toLowerCase();
@@ -69,7 +60,6 @@ const VehicleList = ({
         )
       );
     }
-    console.log(sortedList)
     const sortModel = searchParam.get("model");
     if (sortModel && sortModel !== "Model") {
       sortedList = sortedList.filter((a) => a.model.toString() === sortModel);

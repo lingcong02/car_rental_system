@@ -106,10 +106,9 @@ const NavIcons = () => {
         "Content-Type": "application/json",
       },
     });
-    const response = await query.json();
-    if (response.message == 200) {
+    if (query.ok) {
       cookies.remove("isLoggedIn");
-      toast("Logout Successfullly");
+      toast.success("Logout Successfullly");
     }
 
     // Cookies.remove("refreshToken");

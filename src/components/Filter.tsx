@@ -21,7 +21,7 @@ const Filter = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch("api/VehicleModel/GetAll", {
+      const response = await fetch("/api/VehicleModel/GetAll", {
         method: "GET",
       });
       const result = await response.json();

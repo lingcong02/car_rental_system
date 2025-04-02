@@ -92,14 +92,13 @@ const LoginPage = () => {
         default:
           break;
       }
-      console.log(response.message)
-      if(response.message === 200){
-        cookies.set("isLoggedIn", "1");
-        toast("Login Successfully");
+      if(query?.ok){
+        cookies.set("isLoggedIn", "1", {expires: new Date(new Date(Date.now() + 60 * 60 * 1000))});
+        toast.success("Login Successfully");
         router.back();
       }
       else{
-        toast(response.message);
+        toast.error(response.message);
       }
 
     //   switch (response) {

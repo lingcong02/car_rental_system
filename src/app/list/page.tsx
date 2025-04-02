@@ -16,7 +16,6 @@ const ListPage = ({ searchParams }: { searchParams: any }) => {
       <Filter/>
       <Suspense fallback={<Skeleton />}>
         <VehicleList
-          searchParams={searchParams}
         />
       </Suspense>
     </div>

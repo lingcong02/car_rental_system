@@ -1,84 +1,94 @@
 "use client";
 
+import { DateRangePicker } from "@/components/DateRangePicker";
+import { DialogDemo } from "@/components/DialogDemo";
+import { FormDialog } from "@/components/FormDialog";
+import Skeleton from "@/components/Skeleton";
+import { Button } from "@/components/ui/button";
 import VehicleImages from "@/components/VehicleImages";
-import { VehicleModel } from "@/model/Model";
+import { VehicleModel, VehicleModelModel } from "@/model/Model";
 import { notFound } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import React from "react";
+import { Suspense, use, useEffect, useState } from "react";
+import { DateRange } from "react-day-picker";
 
-const SingleVehiclePage = ({ params }: { params: { id: number } }) => {
+const SingleVehiclePage = ({ params }: { params: Promise<{ id: number }> }) => {
+  // Properly unwrap the params promise
+  const { id } = use(params);
+
   const [vehicle, setVehicle] = useState<VehicleModel>();
+  const [vehicleModelList, setVehicleModelList] = useState<VehicleModelModel[]>(
+    []
+  );
+  const [showDialog, setShowDialog] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedDateRange, setSelectedDateRange] = useState<DateRange>();
+
+  const handleDateChange = (dateRange: DateRange | undefined) => {
+    setSelectedDateRange(dateRange);
+    console.log(dateRange);
+  };
+
+  const handleShowDialog = () => {
+    setShowDialog(!showDialog);
+  };
 
   useEffect(() => {
     const fetchVehicle = async () => {
-      const query = await fetch("api/Vehicle/GetById", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: params.id }),
-      });
-      const response = await query.json();
-      setVehicle(response);
-      console.log(response);
+      try {
+        setIsLoading(true);
+        const query = await fetch("/api/Vehicle/GetById", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(id), // Use the unwrapped id
+        });
+        const response = await query.json();
+
+        const response2 = await fetch("/api/VehicleModel/GetAll", {
+          method: "GET",
+        });
+        const result2 = await response2.json();
+
+        if (!query.ok) {
+          return notFound();
+        }
+        setVehicle(response);
+        setVehicleModelList(result2);
+      } catch (err) {
+        setError("Failed to fetch vehicle");
+        return notFound();
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchVehicle();
-  }, []);
-  console.log(vehicle);
-//   if (!vehicle) {
-//     return notFound();
-//   }
+  }, [id]); // Add id to dependency array
+  if (isLoading) return <Skeleton />;
+  if (error) return <p>Error: {error}</p>;
+
+  if (!vehicle) return notFound();
 
   return (
     <div className="px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 relative flex flex-col lg:flex-row gap-16">
-      {/* IMG */}
       <div className="w-full lg:w-1/2 lg:sticky top-20 h-max">
-        <VehicleImages items={vehicle.image} />
+        {vehicle.image && <VehicleImages items={vehicle.image} />}
       </div>
-      {/* TEXTS */}
       <div className="w-full lg:w-1/2 flex flex-col gap-6">
-        <h1 className="text-4xl font-medium">{vehicle.name}</h1>
+        <h1 className="text-4xl font-medium">
+          {vehicleModelList?.find((e) => e.id === vehicle.model)?.desc}{" "}
+          {vehicle.name}
+        </h1>
         <p className="text-gray-500">{vehicle.desc}</p>
         <div className="h-[2px] bg-gray-100" />
-        RM{vehicle.price}/per days
-        {/* {vehicle.price === vehicle.price?.discountedPrice ? (
-          <h2 className="font-medium text-2xl">${vehicle.price?.price}</h2>
-        ) : (
-          <div className="flex items-center gap-4">
-            <h3 className="text-xl text-gray-500 line-through">
-              ${vehicle.price?.price}
-            </h3>
-            <h2 className="font-medium text-2xl">
-              ${vehicle.price?.discountedPrice}
-            </h2>
-          </div>
-        )} */}
-        {/* <div className="h-[2px] bg-gray-100" />
-        {vehicle.variants && vehicle.productOptions ? (
-          <CustomizeProducts
-            productId={product._id!}
-            variants={product.variants}
-            productOptions={product.productOptions}
-          />
-        ) : (
-          <Add
-            productId={product._id!}
-            variantId="00000000-0000-0000-0000-000000000000"
-            stockNumber={product.stock?.quantity || 0}
-          />
-        )} */}
-        {/* <div className="h-[2px] bg-gray-100" />
-        {vehicle.additionalInfoSections?.map((section: any) => (
-          <div className="text-sm" key={section.title}>
-            <h4 className="font-medium mb-4">{section.title}</h4>
-            <p>{section.description}</p>
-          </div>
-        ))}
-        <div className="h-[2px] bg-gray-100" />
-        REVIEWS
-        <h1 className="text-2xl">User Reviews</h1>
-        <Suspense fallback="Loading...">
-          <Reviews vehicleId={vehicle._id!} />
-        </Suspense> */}
+        <h2 className="font-medium text-2xl">RM{vehicle.price} / days</h2>
+        <DateRangePicker onChange={handleDateChange} />
+        <FormDialog vehicle={vehicle} dateRange={selectedDateRange}/>
+        
+        <Button onChange={handleShowDialog}>button</Button>
+        {/* {showDialog &&<DialogDemo/>      } */}
       </div>
     </div>
   );

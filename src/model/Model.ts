@@ -16,3 +16,22 @@ export type VehicleModelModel = {
     id: number;
     desc: string;
 }
+
+export type UserModel = {
+    name: string;
+    password: string;
+    email: string;
+    phone: string;
+}
+
+export type BookingModel = {
+    bookingNo: string;
+    vehicleId: number;
+    userId: number;
+    custName: string;
+    custEmail: string;
+    custPhone: string;
+    startDate: string;
+    endDate: string;
+    totalPrice: number;
+}

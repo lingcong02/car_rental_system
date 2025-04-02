@@ -1,11 +1,14 @@
 "use client";
 
+import { profile } from "console";
+import { useCookies } from "next-client-cookies";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 // import CartModal from "./CartModal";
-// import { useWixClient } from "@/hooks/useWixClient";
+// import { useWixClient } from "@/hookadd next-client-cookiess/useWixClient";
 // import Cookies from "js-cookie";
 // import { useCartStore } from "@/hooks/useCartStore";
 
@@ -16,7 +19,16 @@ const NavIcons = () => {
 
   const router = useRouter();
   const pathName = usePathname();
+  const cookies = useCookies();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  useEffect(() => {
+    if (cookies.get("isLoggedIn")) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
+  });
   // const wixClient = useWixClient();
   // const isLoggedIn = wixClient.auth.loggedIn();
 
@@ -27,9 +39,46 @@ const NavIcons = () => {
     // if (!isLoggedIn) {
     //   router.push("/login");
     // } else {
-    setIsProfileOpen((prev) => !prev);
+    setIsProfileOpen(!isProfileOpen);
     // }
   };
+  let profileRef = useRef<HTMLDivElement | null>(null);
+
+  // useEffect(() => {
+  //   const handleClickOutside = (event: any) => {
+  //     const profileMenu = document.getElementById("profile-menu");
+  //     const profileIcon = document.getElementById("profile-icon");
+  //     console.log(profileMenu);
+
+  //     if (
+  //       profileMenu &&
+  //       !profileMenu.contains(event.target) &&
+  //       profileIcon &&
+  //       !profileIcon.contains(event.target)
+  //     ) {
+  //       setIsProfileOpen(false);
+  //     }
+  //   };
+
+  //   // Add event listener for clicks outside of the profile menu
+  //   document.addEventListener("mousedown", handleClickOutside);
+
+  //   // Cleanup event listener when component unmounts
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // AUTH WITH WIX-MANAGED AUTH
 
@@ -49,6 +98,20 @@ const NavIcons = () => {
 
   const handleLogout = async () => {
     setIsLoading(true);
+
+    const query = await fetch("/api/Auth/Logout", {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const response = await query.json();
+    if (response.message == 200) {
+      cookies.remove("isLoggedIn");
+      toast("Logout Successfullly");
+    }
+
     // Cookies.remove("refreshToken");
     // const { logoutUrl } = await wixClient.auth.logout(window.location.href);
     setIsLoading(false);
@@ -63,26 +126,35 @@ const NavIcons = () => {
   // }, [wixClient, getCart]);
 
   return (
-    <div className="flex items-center gap-4 xl:gap-6 relative">
+    <div className="flex items-center gap-4 xl:gap-6 relative" ref={profileRef}>
       <Image
+        id="profile-icon"
         src="/profile.png"
         alt=""
         width={22}
         height={22}
         className="cursor-pointer"
-        // onClick={login}
         onClick={handleProfile}
       />
       {isProfileOpen && (
-        <div className="absolute p-4 rounded-md top-12 left-0 bg-white text-sm shadow-[0_3px_10px_rgb(0,0,0,0.2)] z-20">
-          <Link href="/profile">Profile</Link>
+        <div
+          id="profile-menu"
+          className="absolute p-4 rounded-md top-12 left-0 bg-white text-sm shadow-[0_3px_10px_rgb(0,0,0,0.2)] z-20"
+        >
+          {isLoggedIn ? (
+            <>
+              <Link href="/profile" onClick={handleProfile}>Profile</Link>
 
-          <div className="mt-2 cursor-pointer">
-            <Link href="/history">History</Link>
-          </div>
-          <div className="mt-2 cursor-pointer" onClick={handleLogout}>
-            {isLoading ? "Logging out" : "Logout"}
-          </div>
+              <div className="mt-2 cursor-pointer">
+                <Link href="/history" onClick={handleProfile}>History</Link>
+              </div>
+              <div className="mt-2 cursor-pointer" onClick={handleLogout}>
+                {isLoading ? "Logging out" : "Logout"}
+              </div>
+            </>
+          ) : (
+            <Link href="/login">Login</Link>
+          )}
         </div>
       )}
     </div>

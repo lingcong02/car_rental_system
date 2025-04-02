@@ -12,6 +12,13 @@ const Filter = () => {
     []
   );
 
+  const [modelParam, setModelParam] = useState(searchParams.get("model"));
+  const [minParam, setMinParam] = useState(searchParams.get("min"));
+  const [maxParam, setMaxParam] = useState(searchParams.get("max"));
+  const [sortTypeParam, setSortTypeParam] = useState(
+    searchParams.get("sortType")
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       const response = await fetch("api/VehicleModel/GetAll", {
@@ -40,10 +47,13 @@ const Filter = () => {
           id=""
           className="py-2 px-4 rounded-2xl text-xs font-medium bg-[#EBEDED]"
           onChange={handleFilterChange}
+          defaultValue={modelParam || "Model"}
         >
-          <option>Model</option>
+          <option key="Model" value="Model">Model</option>
           {vehicleModelList.map((vehicleModel: VehicleModelModel) => (
-            <option key={vehicleModel.id} value={vehicleModel.id}>{vehicleModel.desc}</option>
+            <option key={vehicleModel.id} value={vehicleModel.id}>
+              {vehicleModel.desc}
+            </option>
           ))}
         </select>
         <input
@@ -52,6 +62,7 @@ const Filter = () => {
           placeholder="min price"
           className="text-xs rounded-2xl pl-2 w-24 ring-1 ring-gray-400"
           onChange={handleFilterChange}
+          defaultValue={minParam || ""}
         />
         <input
           type="text"
@@ -59,6 +70,7 @@ const Filter = () => {
           placeholder="max price"
           className="text-xs rounded-2xl pl-2 w-24 ring-1 ring-gray-400"
           onChange={handleFilterChange}
+          defaultValue={maxParam || ""}
         />
       </div>
       <div className="">
@@ -67,6 +79,7 @@ const Filter = () => {
           id=""
           className="py-2 px-4 rounded-2xl text-xs font-medium bg-white ring-1 ring-gray-400"
           onChange={handleFilterChange}
+          defaultValue={sortTypeParam ||""}
         >
           <option>Sort By</option>
           <option value="asc-price">Price (low to high)</option>

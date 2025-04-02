@@ -4,11 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { VehicleModel, VehicleModelModel } from "@/model/Model";
-import { PaginationComponent } from "./PaginationComponent";
+import { PaginationWithLinks } from "./PaginationWithLinks";
 import { useSearchParams } from "next/navigation";
 import Skeleton from "./Skeleton";
+import { useRouter } from "next/router";
 
-const VEHICLE_PER_PAGE = 8;
+const VEHICLE_PER_PAGE = 4;
 
 const VehicleList = ({
   limit,
@@ -17,38 +18,6 @@ const VehicleList = ({
   limit?: number;
   searchParams?: any;
 }) => {
-  // const wixClient = await wixClientServer();
-
-  // const productQuery = wixClient.products
-  //   .queryProducts()
-  //   .startsWith("name", searchParams?.name || "")
-  //   .eq("collectionIds", categoryId)
-  //   .hasSome(
-  //     "productType",
-  //     searchParams?.type ? [searchParams.type] : ["physical", "digital"]
-  //   )
-  //   .gt("priceData.price", searchParams?.min || 0)
-  //   .lt("priceData.price", searchParams?.max || 999999)
-  //   .limit(limit || PRODUCT_PER_PAGE)
-  //   .skip(
-  //     searchParams?.page
-  //       ? parseInt(searchParams.page) * (limit || PRODUCT_PER_PAGE)
-  //       : 0
-  //   );
-  //   // .find();
-
-  //   if (searchParams?.sort) {
-  //     const [sortType, sortBy] = searchParams.sort.split(" ");
-
-  //     if (sortType === "asc") {
-  //       productQuery.ascending(sortBy);
-  //     }
-  //     if (sortType === "desc") {
-  //       productQuery.descending(sortBy);
-  //     }
-  //   }
-
-  //   const res = await productQuery.find();
   const searchParam = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -60,6 +29,7 @@ const VehicleList = ({
   const [sortedVehicleList, setSortedVehicleList] = useState<VehicleModel[]>(
     []
   );
+  const currentPage = parseInt(searchParam.get("page") || "1");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,6 +61,15 @@ const VehicleList = ({
 
     let sortedList = [...vehicleList];
 
+    const sortName = searchParam.get("name")?.toLowerCase();
+    if (sortName != "") {
+      sortedList = sortedList.filter((vehicle) =>
+        [vehicle.name, vehicle.platNo, vehicleModelList?.find((e) => e.id === vehicle.model)?.desc, vehicle.price.toFixed(2)].some((value) =>
+          typeof value === "string" && value.toLowerCase().includes(sortName || "")
+        )
+      );
+    }
+    console.log(sortedList)
     const sortModel = searchParam.get("model");
     if (sortModel && sortModel !== "Model") {
       sortedList = sortedList.filter((a) => a.model.toString() === sortModel);
@@ -119,67 +98,14 @@ const VehicleList = ({
   if (isLoading) return <Skeleton />;
   if (error) return <p>Error: {error}</p>;
 
-  // try{
-  //   setIsLoading(true);
-  //   const sortModel = searchParam.get("model");
-  //   if (sortModel !== "Model" && sortModel !== null) {
-  //     sortedVehicleList = [...vehicleList].filter(
-  //       (a) => a.model.toString() === sortModel
-  //     );
-  //   }
-  //   // else {
-  //   //   sortedVehicleList = [...vehicleList];
-  //   // }
-
-  //   const minPrice = searchParam.get("min");
-  //   if (minPrice !== "" && minPrice !== null) {
-  //     sortedVehicleList = [...sortedVehicleList].filter(
-  //       (a) => a.price >= parseFloat(minPrice)
-  //     );
-  //   }
-  //   // else {
-  //   //   sortedVehicleList = [...vehicleList];
-  //   // }
-
-  //   const maxPrice = searchParam.get("max");
-  //   if (maxPrice !== "" && maxPrice !== null) {
-  //     sortedVehicleList = [...sortedVehicleList].filter(
-  //       (a) => a.price <= parseFloat(maxPrice)
-  //     );
-  //   }
-  //   //  else {
-  //   //   sortedVehicleList = [...vehicleList];
-  //   // }
-
-  //   const sortType = searchParam.get("sortType");
-  //   if(sortType !== null){
-  //     sortedVehicleList = [...sortedVehicleList].sort((a, b) => {
-  //       switch (sortType) {
-  //         case "asc-price":
-  //           return a.price - b.price;
-  //         case "desc-price":
-  //           return b.price - a.price;
-  //         default:
-  //           return 0;
-  //       }
-  //     });
-  //   }
-  // }
-  // catch(error){
-
-  // }finally{
-  //   setIsLoading(false);
-  // }
-
-  // console.log(sortedVehicleList);
-
-  // const maxPage = vehicleList?.length! / VEHICLE_PER_PAGE;
-  // console.log(maxPage)
-  // const vehicleList = [...vehicleList].sort((a, b) => a.price - b.price); // Ascending
+  const displayedVehicleList = sortedVehicleList.slice(
+    (currentPage - 1) * VEHICLE_PER_PAGE,
+    currentPage * VEHICLE_PER_PAGE
+  );
 
   return (
     <div className="mt-12 flex gap-x-8 gap-y-16 justify-between flex-wrap">
-      {sortedVehicleList.map((vehicle: VehicleModel) => (
+      {displayedVehicleList.map((vehicle: VehicleModel) => (
         <Link
           href={"/list/" + vehicle.id}
           className="w-full flex flex-col justify-start gap-4 sm:w-[45%] lg:w-[22%]"
@@ -191,8 +117,8 @@ const VehicleList = ({
           <div className="relative w-full h-80">
             <Image
               src={
-                vehicle.image?.[0]?.path
-                  ? `/vehicles_image/${vehicle.image[0].path}`
+                vehicle.image[0]?.path
+                  ? `/vehicles_image/${vehicle.image[0]?.path}`
                   : "/emptyVehicle.png"
               }
               alt=""
@@ -200,10 +126,11 @@ const VehicleList = ({
               sizes="25vw"
               className="absolute object-cover rounded-md z-10 hover:opacity-0 transition-opacity easy duration-500"
             />
+
             <Image
               src={
-                vehicle.image?.[1]?.path
-                  ? `/vehicles_image/${vehicle.image[1].path}`
+                vehicle.image[1]?.path
+                  ? `/vehicles_image/${vehicle.image[1]?.path}`
                   : "/emptyVehicle.png"
               }
               alt=""
@@ -211,44 +138,32 @@ const VehicleList = ({
               sizes="25vw"
               className="absolute object-cover rounded-md"
             />
-            {/* {vehicle.media?.items && (
-              
-            )} */}
           </div>
           <div className="flex justify-between">
-            <span className="font-medium">{vehicle.name}</span>
+            <span className="font-medium">{vehicle.platNo}</span>
             <span className="font-semibold">
               RM{vehicle.price.toFixed(2)}/days
             </span>
           </div>
-          {/* {vehicle.additionalInfoSections && (
-            <div
-              className="text-sm text-gray-500"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(
-                  vehicle.additionalInfoSections.find(
-                    (section: any) => section.title === "shortDesc"
-                  )?.description || ""
-                ),
-              }}
-            ></div>
-          )} */}
-          <button className="rounded-2xl ring-1 ring-lama text-lama w-max py-2 px-4 text-xs hover:bg-lama hover:text-blue-700">
+          <button className="rounded-2xl ring-1 ring-lama text-lama w-max py-2 px-4 text-xs hover:bg-lama hover:text-blue-700 cursor-pointer">
             View Details
           </button>
         </Link>
       ))}
-      {/* {searchParams?.cat || searchParams?.name ? (
-        <Pagination
-          currentPage={res.currentPage || 0}
-          hasPrev={res.hasPrev()}
-          hasNext={res.hasNext()}
-        />
-      ) : null} */}
-      {vehicleList?.length! % 4 !== 0 && (
-        <div className="w-[22%] min-w-[250px] invisible"></div>
+      {sortedVehicleList.length % 4 === 2 && (
+        <>
+          <div className="sm:w-[45%] lg:w-[22%] invisible"></div>
+          <div className="sm:w-[45%] lg:w-[22%] invisible"></div>
+        </>
       )}
-      <PaginationComponent pageCount={10} />
+      {sortedVehicleList.length % 4 === 3 && (
+        <div className="sm:w-[45%] lg:w-[22%] invisible"></div>
+      )}
+      <PaginationWithLinks
+        page={currentPage}
+        pageSize={VEHICLE_PER_PAGE}
+        totalCount={sortedVehicleList.length}
+      />
     </div>
   );
 };

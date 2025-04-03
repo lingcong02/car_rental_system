@@ -3,6 +3,7 @@ import Menu from "./Menu";
 import Image from "next/image";
 import SearchBar from "./SearchBar";
 import NavIcons from "./NavIcons";
+import UserIcon from "./UserIcon";
 
 // const NavIcons = dynamic(() => import("./NavIcons"), { ssr: false });
 
@@ -34,7 +35,7 @@ const Navbar = () => {
         {/* RIGHT */}
         <div className="w-2/3 xl:w-1/2 flex items-center justify-between gap-8">
           <SearchBar />
-          <NavIcons />
+          <UserIcon />
         </div>
       </div>
     </div>

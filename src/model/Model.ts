@@ -35,3 +35,15 @@ export type BookingModel = {
     endDate: string;
     totalPrice: number;
 }
+
+export type BookingRequestModel = {
+    bookingNo: string;
+    custName: string;
+    custEmail: string;
+    custPhone: string;
+    startDate: Date;
+    endDate: Date;
+    totalPrice: number;
+    user: UserModel;
+    vehicle: VehicleModel;
+}

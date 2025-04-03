@@ -85,10 +85,7 @@ const SingleVehiclePage = ({ params }: { params: Promise<{ id: number }> }) => {
         <div className="h-[2px] bg-gray-100" />
         <h2 className="font-medium text-2xl">RM{vehicle.price} / days</h2>
         <DateRangePicker onChange={handleDateChange} />
-        <FormDialog vehicle={vehicle} dateRange={selectedDateRange}/>
-        
-        <Button onChange={handleShowDialog}>button</Button>
-        {/* {showDialog &&<DialogDemo/>      } */}
+        <FormDialog vehicle={vehicle} dateRange={selectedDateRange} />
       </div>
     </div>
   );

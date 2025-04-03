@@ -1,7 +1,7 @@
 "use client";
 
 import { useCookies } from "next-client-cookies";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -13,17 +13,7 @@ enum MODE {
 }
 
 const LoginPage = () => {
-  //   const wixClient = useWixClient();
-  const router = useRouter();
-
-  //   const isLoggedIn = wixClient.auth.loggedIn();
-
-  //   if (isLoggedIn) {
-  //     router.push("/");
-  //   }
-
   const [mode, setMode] = useState(MODE.LOGIN);
-
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +22,12 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const cookies = useCookies();
-
+  const router = useRouter();
+  useEffect(() => {
+    if (cookies.get("isLoggedIn") === "user") {
+      return notFound();
+    }
+  }, [router, cookies]);
   const formTitle =
     mode === MODE.LOGIN
       ? "Log in"
@@ -61,7 +56,7 @@ const LoginPage = () => {
       let query;
       switch (mode) {
         case MODE.LOGIN:
-          query = await fetch("/api/Auth/Login", {
+          query = await fetch("/api/User/Login", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -93,8 +88,9 @@ const LoginPage = () => {
           break;
       }
       if(query?.ok){
-        cookies.set("isLoggedIn", "1", {expires: new Date(new Date(Date.now() + 60 * 60 * 1000))});
+        cookies.set("isLoggedIn", "user", {expires: new Date(new Date(Date.now() + 60 * 60 * 1000))});
         toast.success("Login Successfully");
+        router.refresh();
         router.back();
       }
       else{
@@ -141,75 +137,6 @@ const LoginPage = () => {
       setIsLoading(false);
     }
   };
-  
-
-  // const [user, setUser] = useState("");
-  // useEffect(() => {
-  //   fetch("/api/Auth/Login", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     credentials: "include",
-  //     body: JSON.stringify({ userName: "user1", password: "abc123" }),
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => cookies.set("isLoggedIn", "1"))
-  //     .catch((error) => console.error("Fetch error:", error));
-  // }, []);
-
-  // fetch("/api/Auth/Logout", {
-  //   method: "GET",
-  //   credentials: "include",
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //     },
-  //   // body: JSON.stringify({
-  //   //   name: "user1",
-  //   //   password: "abc123",
-  //   //   phone: "0123456789",
-  //   //   email: "user@gmail.com",
-  //   // }),
-  // })
-  //   .then(async(response) => response.json())
-  //   .then((data) => console.log("Response:", data))
-  //   .catch((error) => console.error("Fetch error:", error));
-
-  // fetch("/api/User/Update", {
-  //   method: "PATCH",
-  //   credentials: "include",
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //     },
-  //   body: JSON.stringify({
-  //     name: "user1",
-  //     password: "abc123",
-  //     phone: "0123456789",
-  //     email: "user@gmail.com",
-  //   }),
-  // })
-  //   .then(async(response) => response.json())
-  //   .then((data) => console.log("Response:", data))
-  //   .catch((error) => console.error("Fetch error:", error));
-
-  // useEffect(() => {
-  //   fetch("/api/Auth/Login", {
-  //     method: "POST",
-  //     body: JSON.stringify([
-  //       {
-  //         name: "user1",
-  //         password: "abc123",
-  //       },
-  //     ]),
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   })
-  //     .then((res) => (res.ok ? res.json() : Promise.reject("Unauthorized")))
-  //     .then((data) => setEmail(data))
-  //     .catch((error) => console.error(error));
-  // }, []);
-  // console.log(email);
 
   return (
     <div className="h-[calc(100vh-80px)] px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 flex items-center justify-center">

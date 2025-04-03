@@ -127,6 +127,7 @@ export function FormDialog({
         toast.success("Booking Confirmed!");
         setShowAlert(false);
         setShowDialog(false);
+        router.push("/list");
       } else {
         toast.error(response.message);
       }

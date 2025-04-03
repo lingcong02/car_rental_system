@@ -1,6 +1,26 @@
-import React from 'react'
+"use client";
+
+import { redirect } from 'next/navigation';
+import React, { useEffect } from 'react'
 
 const page = () => {
+  useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const response = await fetch("/api/Admin/Auth", {
+            method: "GET",
+            credentials: "include",
+          });
+          if (!response.ok) {
+            return redirect("/admin-login");
+          }
+
+        } catch (err) {
+          return redirect("/admin-login");
+        }
+      };
+      fetchData();
+    }, []);
   return (
     <div>page</div>
   )

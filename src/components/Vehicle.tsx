@@ -22,7 +22,6 @@ const Vehicle = ({ vehicle, setFetchTable }: { vehicle: VehicleModel, setFetchTa
     []
   );
   const [showAlert, setShowAlert] = useState(false);
-  const [deleteAction, setDeleteAction] = useState(false);
   
   const fetchData = async () => {
     try {
@@ -50,7 +49,7 @@ const Vehicle = ({ vehicle, setFetchTable }: { vehicle: VehicleModel, setFetchTa
     });
 
     if (response.ok) {
-        setFetchTable();
+        setFetchTable((prev: any) => !prev);
       toast.success("Delete Successfully");
     } else {
       toast.error("Failed to delete vehicle");

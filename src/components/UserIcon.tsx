@@ -65,6 +65,11 @@ const UserIcon = () => {
 
     setIsLoading(false);
   };
+
+  const isAdminPage =
+    pathname === "/dashboard" ||
+    pathname === "/booking" ||
+    pathname === "/vehicle";
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -83,34 +88,27 @@ const UserIcon = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {isLoggedIn ? (
-          cookies.get("isLoggedIn") === "admin" ? (
-            <>
-              <DropdownMenuItem
-                onClick={handleLogoutAdmin}
-                className="cursor-pointer"
-              >
-                {isLoading ? "Logging out" : "Logout"}
-              </DropdownMenuItem>
-            </>
-          ) : (
-            <>
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link href="/profile">Profile</Link>
-              </DropdownMenuItem>
+        {isAdminPage ? (
+          <DropdownMenuItem
+            onClick={handleLogoutAdmin}
+            className="cursor-pointer"
+          >
+            {isLoading ? "Logging out..." : "Logout"}
+          </DropdownMenuItem>
+        ) : isLoggedIn ? (
+          <>
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link href="/profile">Profile</Link>
+            </DropdownMenuItem>
 
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link href="/history">History</Link>
-              </DropdownMenuItem>
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link href="/history">History</Link>
+            </DropdownMenuItem>
 
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="cursor-pointer"
-              >
-                {isLoading ? "Logging out" : "Logout"}
-              </DropdownMenuItem>
-            </>
-          )
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+              {isLoading ? "Logging out..." : "Logout"}
+            </DropdownMenuItem>
+          </>
         ) : (
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link href="/login">Sign In</Link>

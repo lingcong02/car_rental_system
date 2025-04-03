@@ -55,8 +55,15 @@ const VehicleList = () => {
     const sortName = searchParam.get("name")?.toLowerCase();
     if (sortName != "") {
       sortedList = sortedList.filter((vehicle) =>
-        [vehicle.name, vehicle.platNo, vehicleModelList?.find((e) => e.id === vehicle.model)?.desc, vehicle.price.toFixed(2)].some((value) =>
-          typeof value === "string" && value.toLowerCase().includes(sortName || "")
+        [
+          vehicle.name,
+          vehicle.platNo,
+          vehicleModelList?.find((e) => e.id === vehicle.model)?.desc,
+          vehicle.price.toFixed(2),
+        ].some(
+          (value) =>
+            typeof value === "string" &&
+            value.toLowerCase().includes(sortName || "")
         )
       );
     }
@@ -152,7 +159,7 @@ const VehicleList = () => {
       <PaginationWithLinks
         page={currentPage}
         pageSize={VEHICLE_PER_PAGE}
-        totalCount={sortedVehicleList.length}
+        totalCount={displayedVehicleList.length}
       />
     </div>
   );

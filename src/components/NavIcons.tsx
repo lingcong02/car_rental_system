@@ -99,7 +99,7 @@ const NavIcons = () => {
   const handleLogout = async () => {
     setIsLoading(true);
 
-    const query = await fetch("/api/User/Logout", {
+    const query = await fetch("/api/Auth/Logout", {
       method: "GET",
       credentials: "include",
       headers: {

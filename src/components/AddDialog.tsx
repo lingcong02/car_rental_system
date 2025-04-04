@@ -2,27 +2,18 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { differenceInDays, format } from "date-fns";
-import { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  BookingModel,
-  UserModel,
-  VehicleModel,
-  VehicleModelModel,
-} from "@/model/Model";
+import { VehicleModel, VehicleModelModel } from "@/model/Model";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +23,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { UserInput } from "./UserInput";
 import {
@@ -44,8 +34,6 @@ import {
 } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { Loader2, Upload, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { error } from "console";
 
 const AddDialog = ({
   open,
@@ -58,19 +46,33 @@ const AddDialog = ({
   vehicle?: VehicleModel;
   method: "add" | "update";
 }) => {
+  console.log(vehicle)
   const router = useRouter();
   const [vehicleModelList, setVehicleModelList] = useState<VehicleModelModel[]>(
     []
   );
   const [showAlert, setShowAlert] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [name, setName] = useState("");
-  const [model, setModel] = useState("");
-  const [platNo, setPlatNo] = useState("");
-  const [desc, setDesc] = useState("");
-  const [price, setPrice] = useState("");
-  const [image,setImage] = useState([]);
+  // Form state
+  const [name, setName] = useState(vehicle?.name || "");
+  const [model, setModel] = useState(vehicle?.model.toString() || "");
+  const [platNo, setPlatNo] = useState(vehicle?.platNo || "");
+  const [desc, setDesc] = useState(vehicle?.desc || "");
+  const [price, setPrice] = useState(vehicle?.price.toString() || "");
+  const [image, setImage] = useState<string[]>(
+    vehicle?.image.map((img) => img.path) || []
+  );
 
+  // Image upload state
+  const [previews, setPreviews] = useState<{ url: string; name: string }[]>(
+    vehicle?.image.map((img) => ({ url: img.path, name: img.path.split('/').pop() || "unknown" })) || []
+  );
+  const [files, setFiles] = useState<File[]>(vehicle?.image.map((img) => new File([img.path], img.path.split('/').pop() || "unknown")) || []);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch vehicle models
   useEffect(() => {
     const fetchData = async () => {
       const query = await fetch("/api/VehicleModel/GetAll", { method: "GET" });
@@ -78,22 +80,14 @@ const AddDialog = ({
       setVehicleModelList(response);
     };
     fetchData();
+    
   }, []);
 
-  //   console.log(name, model, platNo, desc, price, images, imagePreviews)
-
-  //---Image Upload---
-  const [previews, setPreviews] = useState<{ url: string; name: string }[]>([]);
-  const [files, setFiles] = useState<File[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+  // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
 
     const newFiles = Array.from(e.target.files);
-
-    // Validate file count
     if (newFiles.length + files.length > 4) {
       toast.error("Maximum 4 images allowed");
       return;
@@ -101,7 +95,6 @@ const AddDialog = ({
 
     setFiles((prev) => [...prev, ...newFiles]);
 
-    // Create previews
     const newPreviews = newFiles.map((file) => ({
       url: URL.createObjectURL(file),
       name: file.name,
@@ -109,6 +102,7 @@ const AddDialog = ({
     setPreviews((prev) => [...prev, ...newPreviews]);
   };
 
+  // Remove image
   const removeImage = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
     setPreviews((prev) => {
@@ -118,50 +112,34 @@ const AddDialog = ({
     });
   };
 
-  const handleUpload = async (): Promise<boolean> => {
-    if (files.length === 0) {
-      toast.warning("No files selected");
-      return false;
-    }
+  // Upload images to server
+  const handleUpload = async (): Promise<string[] | false> => {
+    if (files.length === 0) return [];
 
     setIsUploading(true);
-
     try {
       const formData = new FormData();
       files.forEach((file) => formData.append("images", file));
 
-      const response = await fetch("http://localhost:3000/api/upload", {
+      const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
 
-      // First check if response is OK
       if (!response.ok) {
-        // Try to get error message from response
         let errorMessage = "Upload failed";
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorData.message || errorMessage;
         } catch (e) {
-          // If we can't parse JSON, use status text
           errorMessage = response.statusText;
         }
         throw new Error(errorMessage);
       }
 
-      // Now safely parse the JSON
       const result = await response.json();
-
-      toast.success("Images uploaded successfully");
-      console.log("Uploaded files:", result.files);
       setImage(result.files);
-      console.log(image)
-
-      // Reset form
-      setFiles([]);
-      setPreviews([]);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      return true;
+      return result.files;
     } catch (error) {
       console.error("Upload error:", error);
       toast.error(
@@ -173,43 +151,97 @@ const AddDialog = ({
     }
   };
 
-  // Clean up object URLs when component unmounts
+  // Clean up object URLs
   useEffect(() => {
     return () => {
       previews.forEach((preview) => URL.revokeObjectURL(preview.url));
     };
   }, [previews]);
-  //--Image Upload--
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Handle form submission (shows confirmation dialog)
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const uploadImage = await handleUpload();
-    if (uploadImage) {
+    setShowAlert(true);
+  };
+
+  // Handle confirmed submission
+  const handleConfirmedSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      // Validate required fields
+      if (!name || !model || !platNo || !desc || !price) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
+
+      // Upload images if any
+      let uploadedImages: string[] = [];
+      if (files.length > 0) {
+        const uploadResult = await handleUpload();
+        if (uploadResult === false) {
+          toast.error("Image upload failed");
+          return;
+        }
+        uploadedImages = uploadResult || [];
+      }
+
+      // Prepare vehicle data
       const vehicleModel = {
+        id: vehicle?.id || 0,
         name,
         model,
         platNo,
         desc,
-        price,
-        image: image.map((item) => ({
-          path: item
-        }))
+        price: parseFloat(price),
+        image: uploadedImages.map((item) => ({ path: item })),
       };
-      console.log(vehicleModel);
-      try {
-        const query = await fetch("/api/Vehicle/Insert", {
-          method: "PUT",
+      
+      // Submit to server
+      let response;
+      if (method === "update") {
+        response = await fetch("/api/Vehicle/Update", {
+          method: "POST",
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(vehicleModel),
         });
-        const response = await query.json();
-        console.log(response);
-      } catch (err: any) {
-        toast.error("Failed to insert vehicle", err);
+
+      } else {
+        response = await fetch("/api/Vehicle/Insert", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(vehicleModel),
+        });
       }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to insert vehicle");
+      }
+
+      // Success
+      toast.success("Vehicle added successfully!");
+      setFiles([]);
+      setPreviews([]);
+      setName("");
+      setModel("");
+      setPlatNo("");
+      setDesc("");
+      setPrice("");
+      setImage([]);
+      onOpenChange(false);
+      router.refresh();
+    } catch (err: any) {
+      console.error("Submission error:", err);
+      toast.error(err.message || "Failed to create vehicle");
+    } finally {
+      setIsSubmitting(false);
+      setShowAlert(false);
     }
   };
 
@@ -222,6 +254,7 @@ const AddDialog = ({
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <UserInput label="Name" value={name} onChange={setName} />
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Model</Label>
               <Select value={model} onValueChange={setModel} required>
@@ -240,17 +273,19 @@ const AddDialog = ({
                 </SelectContent>
               </Select>
             </div>
+
             <UserInput label="Plat No" value={platNo} onChange={setPlatNo} />
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Description</Label>
               <Textarea
-                placeholder="Type your message here."
                 value={desc}
                 onChange={(e) => setDesc(e.target.value)}
                 className="col-span-3 max-w-[554px]"
                 required
               />
             </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Price</Label>
               <div className="flex items-center w-full max-w-md rounded-lg border bg-background text-foreground col-span-2">
@@ -258,7 +293,7 @@ const AddDialog = ({
                   <span className="h-5 w-5">RM</span>
                 </div>
                 <Input
-                  type="text"
+                  type="number"
                   required
                   className="flex-1 rounded-l-none rounded-r-lg border-0 bg-transparent py-2 pr-4 text-sm focus:outline-none focus:ring-0"
                   value={price}
@@ -266,6 +301,7 @@ const AddDialog = ({
                 />
               </div>
             </div>
+
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right">Image</Label>
               <div className="col-span-3 space-y-4">
@@ -274,10 +310,9 @@ const AddDialog = ({
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   multiple
-                  accept="image/jpeg, image/png, image/webp, image/gif, image/svg+xml"
+                  accept="image/*"
                   className="hidden"
                   disabled={isUploading}
-                  required
                 />
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="space-y-6">
@@ -309,7 +344,6 @@ const AddDialog = ({
                                 type="button"
                                 onClick={() => removeImage(index)}
                                 className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                                disabled={isUploading}
                               >
                                 <X className="h-3 w-3" />
                               </button>
@@ -330,7 +364,12 @@ const AddDialog = ({
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Save changes</Button>
+            <Button type="submit" disabled={isSubmitting || isUploading}>
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Save changes
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -338,22 +377,25 @@ const AddDialog = ({
       <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Add Vehicle</AlertDialogTitle>
+            <AlertDialogTitle>
+              Confirm Vehicle {method === "add" ? "Addition" : "Update"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to confirm this action? This action cannot
-              be undone.
+              Are you sure you want to {method === "add" ? "add" : "update"}{" "}
+              this vehicle? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowAlert(false)}>
+            <AlertDialogCancel disabled={isSubmitting}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                setShowAlert(false);
-                onOpenChange(false); // Close the main dialog only on confirmation
-              }}
+              onClick={handleConfirmedSubmit}
+              disabled={isSubmitting}
             >
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>

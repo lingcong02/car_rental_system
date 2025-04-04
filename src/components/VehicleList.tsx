@@ -115,7 +115,7 @@ const VehicleList = () => {
             <Image
               src={
                 vehicle.image[0]?.path
-                  ? `/vehicles_image/${vehicle.image[0]?.path}`
+                  ? `${vehicle.image[0]?.path}`
                   : "/emptyVehicle.png"
               }
               alt=""
@@ -127,7 +127,7 @@ const VehicleList = () => {
             <Image
               src={
                 vehicle.image[1]?.path
-                  ? `/vehicles_image/${vehicle.image[1]?.path}`
+                  ? `${vehicle.image[1]?.path}`
                   : "/emptyVehicle.png"
               }
               alt=""

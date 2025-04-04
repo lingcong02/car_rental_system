@@ -10,7 +10,7 @@ const VehicleImages = ({ items }: { items: any }) => {
       <div className="h-[500px] relative">
 
         <Image
-          src={items[index] ? `/vehicles_image/${items[index].path}`: "/emptyVehicle.png"}
+          src={items[index] ? `${items[index].path}`: "/emptyVehicle.png"}
           alt=""
           fill
           sizes="50vw"
@@ -26,7 +26,7 @@ const VehicleImages = ({ items }: { items: any }) => {
           >
             <span>{typeof(item.path)}</span>
             <Image
-              src={item.path ? `/vehicles_image/${item.path}`: "/emptyVehicle.png"}
+              src={item.path ? `${item.path}`: "/emptyVehicle.png"}
               alt=""
               fill
               sizes="30vw"

@@ -42,7 +42,6 @@ const BookingTable = () => {
     try {
       const response = await fetch("/api/Admin/Auth", {
         method: "GET",
-        credentials: "include",
       });
       if (!response.ok) {
         return redirect("/admin-login");
@@ -57,6 +56,7 @@ const BookingTable = () => {
         method: "GET",
         credentials: "include",
       });
+      console.log(response1);
       const result1 = await response1.json();
 
       const response2 = await fetch("/api/VehicleModel/GetAll", {

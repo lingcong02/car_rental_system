@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { differenceInDays, format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { toast } from "sonner";
@@ -14,7 +14,6 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   BookingModel,
@@ -53,37 +52,43 @@ export function FormDialog({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  useEffect(() => {
-    const fetchVehicleModels = async () => {
-      try {
-        const response = await fetch("/api/VehicleModel/GetAll", {
-          method: "GET",
-        });
-        const data = await response.json();
-        if (response.ok) {
-          setVehicleModelList(data);
-        } else {
-          toast.error("Failed to load vehicle models");
-        }
-      } catch (error) {
-        toast.error("Error fetching vehicle models");
+  const fetchAuth = async () => {
+    try {
+      const response = await fetch("/api/User/Auth", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        toast.error("Please log in to continue");
+        return router.push("/login");
       }
-    };
-    fetchVehicleModels();
-  }, []);
+    } catch (err) {
+      toast.error("Please log in to continue");
+      return router.push("/login");
+    }
+  };
 
-  const daysBetween =
-    dateRange?.from && dateRange?.to
-      ? differenceInDays(dateRange.to, dateRange.from) + 1
-      : 0;
-  const totalPrice = vehicle.price * daysBetween;
+  const fetchVehicleModels = async () => {
+    try {
+      const response = await fetch("/api/VehicleModel/GetAll", {
+        method: "GET",
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setVehicleModelList(data);
+      } else {
+        toast.error("Failed to load vehicle models");
+      }
+    } catch (error) {
+      toast.error("Error fetching vehicle models");
+    }
+  };
 
-  const handleViewDetail = async () => {
+  const fetchUser = async () => {
     try {
       const response = await fetch("/api/User/GetByJwt", {
         method: "GET",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
       });
       const data = await response.json();
       if (response.ok) {
@@ -93,13 +98,30 @@ export function FormDialog({
         setPhone(data.phone);
       } else {
         toast.error(data.message);
-        router.push("/login");
       }
-    } catch (error) {
-      toast.error("Please log in");
-      router.push("/login");
+    } catch (error: any) {
+      toast.error(error.message);
     }
-  };
+  }; 
+
+  useEffect(() => {
+    if(showDialog){
+      const fetchData = async () => {
+        await fetchAuth();
+        await fetchVehicleModels();
+        await fetchUser();
+      }
+      fetchData();
+    }
+  }, [showDialog]);
+
+   
+
+  const daysBetween =
+    dateRange?.from && dateRange?.to
+      ? differenceInDays(dateRange.to, dateRange.from) + 1
+      : 0;
+  const totalPrice = vehicle.price * daysBetween;
 
   const handleSave = async () => {
     try {
@@ -118,7 +140,7 @@ export function FormDialog({
       };
 
       const response = await fetch("/api/Booking/Insert", {
-        method: "PUT",
+        method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bookingModel),
@@ -138,6 +160,11 @@ export function FormDialog({
     }
   };
 
+  const handleAvtiveAlert = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowAlert(true);
+  };
+
   return (
     <Dialog open={showDialog} onOpenChange={setShowDialog}>
       <DialogTrigger asChild>
@@ -146,7 +173,6 @@ export function FormDialog({
           variant={
             !dateRange?.from || !dateRange?.to ? "destructive" : "default"
           }
-          onClick={handleViewDetail}
           disabled={!dateRange?.from || !dateRange?.to}
         >
           {!dateRange?.from || !dateRange?.to
@@ -158,7 +184,7 @@ export function FormDialog({
         <DialogHeader>
           <DialogTitle>Booking Details</DialogTitle>
         </DialogHeader>
-        <form onSubmit={() => setShowAlert(true)}>
+        <form onSubmit={handleAvtiveAlert}>
           <div className="grid gap-4 py-4">
             <BookingInfo label="Vehicle" value={vehicle.name} />
             <BookingInfo

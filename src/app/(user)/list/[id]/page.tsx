@@ -27,11 +27,7 @@ const SingleVehiclePage = ({ params }: { params: Promise<{ id: number }> }) => {
     setSelectedDateRange(dateRange);
     console.log(dateRange);
   };
-
-  const handleShowDialog = () => {
-    setShowDialog(!showDialog);
-  };
-
+  
   useEffect(() => {
     const fetchVehicle = async () => {
       try {

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { IncomingForm } from 'formidable';
 
 export const config = {
   api: {
@@ -36,7 +35,7 @@ export async function POST(req: Request) {
     const filePath = path.join(uploadDir, fileName);
 
     await fs.writeFile(filePath, Buffer.from(buffer));
-    uploadedFiles.push(`/uploads/${fileName}`);
+    uploadedFiles.push(`/vehicles_image/${fileName}`);
   }
 
   return NextResponse.json({

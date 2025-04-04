@@ -39,13 +39,15 @@ const Booking = ({ booking }: { booking: BookingRequestModel }) => {
       <TableCell className="font-medium">{booking.custPhone}</TableCell>
       <TableCell className="font-medium">{booking.custEmail}</TableCell>
       <TableCell className="hidden sm:table-cell">
-        <Image
-          alt="booking image"
-          className="aspect-square rounded-md object-cover"
-          height="64"
-          src={`/vehicles_image/${booking.vehicle.image[0]?.path}`}
-          width="64"
-        />
+        {booking.vehicle.image[0]?.path && (
+          <Image
+            alt="booking image"
+            className="aspect-square rounded-md object-cover"
+            height="64"
+            src={booking.vehicle.image[0]?.path}
+            width="64"
+          />
+        )}
       </TableCell>
       <TableCell className="font-medium">
         {`${

@@ -73,11 +73,11 @@ function DesktopNav() {
           <Home className="h-5 w-5" />
         </NavItem>
 
-        <NavItem href="/booking" label="Orders">
+        <NavItem href="/booking" label="Bookings">
           <ListOrdered className="h-5 w-5" />
         </NavItem>
 
-        <NavItem href="/vehicle" label="Vehicle">
+        <NavItem href="/vehicle" label="Vehicles">
           <CarFront className="h-5 w-5" />
         </NavItem>    
       </nav>

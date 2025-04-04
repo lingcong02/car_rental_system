@@ -16,13 +16,21 @@ import { VehicleModel, VehicleModelModel } from "@/model/Model";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import DeleteDialog from "./DeleteDialog";
+import AddDialog from "./AddDialog";
 
-const Vehicle = ({ vehicle, setFetchTable }: { vehicle: VehicleModel, setFetchTable: any }) => {
+const Vehicle = ({
+  vehicle,
+  setFetchTable,
+}: {
+  vehicle: VehicleModel;
+  setFetchTable: any;
+}) => {
   const [vehicleModelList, setVehicleModelList] = useState<VehicleModelModel[]>(
     []
   );
   const [showAlert, setShowAlert] = useState(false);
-  
+  const [showDialog, setShowDialog] = useState(false);
+
   const fetchData = async () => {
     try {
       const response = await fetch("/api/VehicleModel/GetAll", {
@@ -34,22 +42,22 @@ const Vehicle = ({ vehicle, setFetchTable }: { vehicle: VehicleModel, setFetchTa
       toast.error("Failed to fetch data");
     }
   };
-  useEffect(() => {    
+  useEffect(() => {
     fetchData();
   }, []);
 
   const handleDelete = (id: number) => async () => {
     const response = await fetch("/api/Vehicle/Deactive", {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
       body: JSON.stringify(id),
     });
 
     if (response.ok) {
-        setFetchTable((prev: any) => !prev);
+      setFetchTable((prev: any) => !prev);
       toast.success("Delete Successfully");
     } else {
       toast.error("Failed to delete vehicle");
@@ -62,7 +70,11 @@ const Vehicle = ({ vehicle, setFetchTable }: { vehicle: VehicleModel, setFetchTa
           alt="vehicle image"
           className="aspect-square rounded-md object-cover"
           height="64"
-          src={`/vehicles_image/${vehicle.image[0]?.path}`}
+          src={
+            vehicle.image[0]?.path
+              ? `${vehicle.image[0]?.path}`
+              : "/emptyVehicle.png"
+          }
           width="64"
         />
       </TableCell>
@@ -89,7 +101,9 @@ const Vehicle = ({ vehicle, setFetchTable }: { vehicle: VehicleModel, setFetchTa
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowDialog(true)}>
+              Edit
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowAlert(true)}>
               Delete
             </DropdownMenuItem>
@@ -101,6 +115,12 @@ const Vehicle = ({ vehicle, setFetchTable }: { vehicle: VehicleModel, setFetchTa
         onOpenChange={setShowAlert}
         handleDeleteAction={handleDelete(vehicle.id)}
         message={"Vehicle"}
+      />
+      <AddDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        method={"update"}
+        vehicle={vehicle}
       />
     </TableRow>
   );

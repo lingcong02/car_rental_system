@@ -23,11 +23,7 @@ const LoginPage = () => {
   const [message, setMessage] = useState("");
   const cookies = useCookies();
   const router = useRouter();
-  useEffect(() => {
-    if (cookies.get("isLoggedIn") === "user") {
-      return notFound();
-    }
-  }, [router, cookies]);
+
   const formTitle =
     mode === MODE.LOGIN
       ? "Log in"
@@ -90,7 +86,6 @@ const LoginPage = () => {
       if(query?.ok){
         cookies.set("isLoggedIn", "user", {expires: new Date(new Date(Date.now() + 60 * 60 * 1000))});
         toast.success("Login Successfully");
-        router.refresh();
         router.back();
       }
       else{

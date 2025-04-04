@@ -34,6 +34,7 @@ const VehicleTable = () => {
     []
   );
   const [showDialog, setShowDialog] = useState(false);
+  const [method, setMethod] = useState("");
 
   const fetchAuth = async () => {
     try {
@@ -48,10 +49,12 @@ const VehicleTable = () => {
       return redirect("/admin-login");
     }
   };
+  
   const fetchData = async () => {
     try {
       const response1 = await fetch("/api/Vehicle/GetAll", { method: "GET" });
       const result1 = await response1.json();
+      console.log(response1);
       setVehicleList(result1);
     } catch (err) {
       return redirect("/admin-login");

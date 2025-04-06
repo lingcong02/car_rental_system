@@ -46,7 +46,6 @@ const AddDialog = ({
   vehicle?: VehicleModel;
   method: "add" | "update";
 }) => {
-  console.log(vehicle)
   const router = useRouter();
   const [vehicleModelList, setVehicleModelList] = useState<VehicleModelModel[]>(
     []
@@ -63,12 +62,20 @@ const AddDialog = ({
   const [image, setImage] = useState<string[]>(
     vehicle?.image.map((img) => img.path) || []
   );
+  const [deleteImage, setDeleteImage] = useState<string[]>();
 
   // Image upload state
   const [previews, setPreviews] = useState<{ url: string; name: string }[]>(
-    vehicle?.image.map((img) => ({ url: img.path, name: img.path.split('/').pop() || "unknown" })) || []
+    vehicle?.image.map((img) => ({
+      url: img.path,
+      name: img.path.split("/").pop() || "unknown",
+    })) || []
   );
-  const [files, setFiles] = useState<File[]>(vehicle?.image.map((img) => new File([img.path], img.path.split('/').pop() || "unknown")) || []);
+  const [files, setFiles] = useState<File[]>(
+    vehicle?.image.map(
+      (img) => new File([img.path], img.path.split("/").pop() || "unknown")
+    ) || []
+  );
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -80,7 +87,6 @@ const AddDialog = ({
       setVehicleModelList(response);
     };
     fetchData();
-    
   }, []);
 
   // Handle file selection
@@ -195,7 +201,7 @@ const AddDialog = ({
         price: parseFloat(price),
         image: uploadedImages.map((item) => ({ path: item })),
       };
-      
+
       // Submit to server
       let response;
       if (method === "update") {
@@ -207,7 +213,6 @@ const AddDialog = ({
           },
           body: JSON.stringify(vehicleModel),
         });
-
       } else {
         response = await fetch("/api/Vehicle/Insert", {
           method: "POST",
@@ -225,7 +230,7 @@ const AddDialog = ({
       }
 
       // Success
-      toast.success("Vehicle added successfully!");
+      toast.success("Vehicle update successfully!");
       setFiles([]);
       setPreviews([]);
       setName("");
@@ -245,8 +250,20 @@ const AddDialog = ({
     }
   };
 
+  const handleOpenChange = () => {
+    setFiles([]);
+    setPreviews([]);
+    setName("");
+    setModel("");
+    setPlatNo("");
+    setDesc("");
+    setPrice("");
+    setImage([]);
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[790px] max-h-[calc(100vh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Vehicle Details</DialogTitle>

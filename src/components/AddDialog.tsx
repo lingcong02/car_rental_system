@@ -40,11 +40,13 @@ const AddDialog = ({
   onOpenChange,
   vehicle,
   method,
+  setFetchTable,
 }: {
   open: boolean;
   onOpenChange: (isOpen: boolean) => void;
   vehicle?: VehicleModel;
   method: "add" | "update";
+  setFetchTable: (prev: any) => void;
 }) => {
   const router = useRouter();
   const [vehicleModelList, setVehicleModelList] = useState<VehicleModelModel[]>(
@@ -59,9 +61,13 @@ const AddDialog = ({
   const [platNo, setPlatNo] = useState(vehicle?.platNo || "");
   const [desc, setDesc] = useState(vehicle?.desc || "");
   const [price, setPrice] = useState(vehicle?.price.toString() || "");
-  const [image, setImage] = useState<string[]>(
-    vehicle?.image.map((img) => img.path) || []
-  );
+  // Image upload state
+  const [previews, setPreviews] = useState<
+    { url: string; name: string; fromServer?: boolean }[]
+  >([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (vehicle) {
@@ -70,24 +76,17 @@ const AddDialog = ({
       setPlatNo(vehicle.platNo);
       setDesc(vehicle.desc);
       setPrice(vehicle.price.toString());
-      setImage(vehicle.image.map((img) => img.path));
+      setPreviews(
+        vehicle?.image.map((img) => ({
+          url: img.path,
+          name: img.path.split("/").pop() || "unknown",
+          fromServer: true,
+        })) || []
+      );
+      setFiles([]);
     }
+    console.log(files);
   }, [open]);
-
-  // Image upload state
-  const [previews, setPreviews] = useState<{ url: string; name: string }[]>(
-    vehicle?.image.map((img) => ({
-      url: img.path,
-      name: img.path.split("/").pop() || "unknown",
-    })) || []
-  );
-  const [files, setFiles] = useState<File[]>(
-    vehicle?.image.map(
-      (img) => new File([img.path], img.path.split("/").pop() || "unknown")
-    ) || []
-  );
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch vehicle models
   useEffect(() => {
@@ -120,13 +119,24 @@ const AddDialog = ({
 
   // Remove image
   const removeImage = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviews((prev) => {
-      const newPreviews = [...prev];
-      URL.revokeObjectURL(newPreviews[index].url);
-      return newPreviews.filter((_, i) => i !== index);
-    });
+    const isFromServer = previews[index].fromServer;
+
+    if (isFromServer) {
+      // Remove from previews only
+      setPreviews((prev) => prev.filter((_, i) => i !== index));
+    } else {
+      // Remove from previews and files
+      const previewToRemove = previews[index];
+      URL.revokeObjectURL(previewToRemove.url);
+
+      setFiles((prev) =>
+        prev.filter((_, i) => i !== index - serverImageCount())
+      );
+      setPreviews((prev) => prev.filter((_, i) => i !== index));
+    }
   };
+
+  const serverImageCount = () => previews.filter((p) => p.fromServer).length;
 
   // Upload images to server
   const handleUpload = async (): Promise<string[] | false> => {
@@ -154,7 +164,6 @@ const AddDialog = ({
       }
 
       const result = await response.json();
-      setImage(result.files);
       return result.files;
     } catch (error) {
       console.error("Upload error:", error);
@@ -200,6 +209,7 @@ const AddDialog = ({
         }
         uploadedImages = uploadResult || [];
       }
+      console.log(uploadedImages);
 
       // Prepare vehicle data
       const vehicleModel = {
@@ -209,7 +219,12 @@ const AddDialog = ({
         platNo,
         desc,
         price: parseFloat(price),
-        image: uploadedImages.map((item) => ({ path: item })),
+        image: [
+          ...previews
+            .filter((img) => img.fromServer)
+            .map((img) => ({ path: img.url })),
+          ...uploadedImages.map((path) => ({ path })),
+        ],
       };
 
       // Submit to server
@@ -248,7 +263,7 @@ const AddDialog = ({
       setPlatNo("");
       setDesc("");
       setPrice("");
-      setImage([]);
+      setFetchTable((prev: any) => !prev);
       onOpenChange(false);
       router.refresh();
     } catch (err: any) {
@@ -268,7 +283,6 @@ const AddDialog = ({
     setPlatNo("");
     setDesc("");
     setPrice("");
-    setImage([]);
     onOpenChange(false);
   };
 

@@ -24,7 +24,7 @@ import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AddDialog from "@/components/AddDialog";
 
-const VEHICLE_PER_PAGE = 5;
+const VEHICLE_PER_PAGE = 8;
 
 const VehicleTable = () => {
   const [vehicleList, setVehicleList] = useState<VehicleModel[]>([]);
@@ -59,9 +59,11 @@ const VehicleTable = () => {
       return redirect("/admin-login");
     }
   };
+  
   useEffect(() => {
+    console.log("fetchTable", fetchTable);
     fetchAuth().then(fetchData);
-  }, [fetchTable]);
+  }, [fetchTable, showDialog]);
 
   useEffect(() => {
     let sortedList = [...vehicleList];
@@ -150,7 +152,7 @@ const VehicleTable = () => {
           </div>
         </CardFooter>
       </Card>
-      <AddDialog open={showDialog} onOpenChange={setShowDialog} method={"add"}/>
+      <AddDialog open={showDialog} onOpenChange={setShowDialog} method={"add"} setFetchTable={setFetchTable}/>
     </div>
   );
 };

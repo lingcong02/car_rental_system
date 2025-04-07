@@ -23,7 +23,7 @@ const Vehicle = ({
   setFetchTable,
 }: {
   vehicle: VehicleModel;
-  setFetchTable: any;
+  setFetchTable: (prev: any) => void;
 }) => {
   const [vehicleModelList, setVehicleModelList] = useState<VehicleModelModel[]>(
     []
@@ -121,6 +121,7 @@ const Vehicle = ({
         onOpenChange={setShowDialog}
         method={"update"}
         vehicle={vehicle}
+        setFetchTable={setFetchTable}
       />
     </TableRow>
   );

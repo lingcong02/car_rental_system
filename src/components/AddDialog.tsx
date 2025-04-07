@@ -62,7 +62,17 @@ const AddDialog = ({
   const [image, setImage] = useState<string[]>(
     vehicle?.image.map((img) => img.path) || []
   );
-  const [deleteImage, setDeleteImage] = useState<string[]>();
+
+  useEffect(() => {
+    if (vehicle) {
+      setName(vehicle.name);
+      setModel(vehicle.model.toString());
+      setPlatNo(vehicle.platNo);
+      setDesc(vehicle.desc);
+      setPrice(vehicle.price.toString());
+      setImage(vehicle.image.map((img) => img.path));
+    }
+  }, [open]);
 
   // Image upload state
   const [previews, setPreviews] = useState<{ url: string; name: string }[]>(

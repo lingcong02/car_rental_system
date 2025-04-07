@@ -34,7 +34,6 @@ const VehicleTable = () => {
     []
   );
   const [showDialog, setShowDialog] = useState(false);
-  const [method, setMethod] = useState("");
 
   const fetchAuth = async () => {
     try {

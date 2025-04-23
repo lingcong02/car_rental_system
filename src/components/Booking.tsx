@@ -56,10 +56,10 @@ const Booking = ({ booking }: { booking: BookingRequestModel }) => {
       </TableCell>
       <TableCell className="font-medium">{booking.vehicle.platNo}</TableCell>
       <TableCell className="font-medium">
-        {format(new Date(booking.startDate), "dd/MM/yyyy")}
+        {booking.startDate.toString()}
       </TableCell>
       <TableCell className="font-medium">
-        {format(new Date(booking.endDate), "dd/MM/yyyy")}
+        {booking.endDate.toString()}
       </TableCell>
 
       <TableCell className="hidden md:table-cell">{`RM ${booking.totalPrice}`}</TableCell>

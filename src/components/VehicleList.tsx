@@ -8,7 +8,7 @@ import { PaginationWithLinks } from "./PaginationWithLinks";
 import { useSearchParams } from "next/navigation";
 import Skeleton from "./Skeleton";
 
-const VEHICLE_PER_PAGE = 8;
+const VEHICLE_PER_PAGE = 4;
 
 const VehicleList = () => {
   const searchParam = useSearchParams();

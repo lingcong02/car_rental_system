@@ -16,8 +16,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { redirect, useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { BookingRequestModel, VehicleModelModel } from "@/model/Model";
 import Booking from "@/components/Booking";
@@ -28,7 +26,6 @@ import { format } from "date-fns";
 const BOOKING_PER_PAGE = 5;
 
 const BookingTable = () => {
-  let router = useRouter();
   const [bookingList, setBookingList] = useState<BookingRequestModel[]>([]);
   const [sortedBookingList, setSortedBookingList] = useState<
     BookingRequestModel[]
@@ -46,7 +43,7 @@ const BookingTable = () => {
       if (!response.ok) {
         return redirect("/admin-login");
       }
-    } catch (err) {
+    } catch (error: any) {
       return redirect("/admin-login");
     }
   };
@@ -78,7 +75,7 @@ const BookingTable = () => {
   };
 
   useEffect(() => {
-    fetchAuth().then(fetchData);    
+    fetchAuth().then(fetchData);
   }, []);
 
   useEffect(() => {
@@ -94,8 +91,8 @@ const BookingTable = () => {
           booking.custEmail,
           booking.custName,
           booking.custPhone,
-          format(new Date(booking.startDate), "dd/MM/yyyy"),
-          format(new Date(booking.startDate), "dd/MM/yyyy"),
+          booking.startDate,
+          booking.endDate,
           booking.vehicle.platNo,
           booking.vehicle.name,
           vehicleModelList?.find((e) => e.id === booking.vehicle.model)?.desc,

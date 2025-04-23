@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import React, { useEffect } from 'react'
 
-const page = () => {
+const Page = () => {
   useEffect(() => {
       const fetchData = async () => {
         try {
@@ -26,4 +26,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Page
